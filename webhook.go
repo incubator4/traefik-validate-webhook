@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/traefik/traefik/v2/pkg/provider/kubernetes/crd/traefik/v1alpha1"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/api/admission/v1beta1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -51,9 +51,9 @@ var (
 )
 
 const (
-	admissionWebhookAnnotationValidateKey = "admission-webhook-example.qikqiak.com/validate"
-	admissionWebhookAnnotationMutateKey   = "admission-webhook-example.qikqiak.com/mutate"
-	admissionWebhookAnnotationStatusKey   = "admission-webhook-example.qikqiak.com/status"
+	admissionWebhookAnnotationValidateKey = "traefik-route-validate.qikqiak.com/validate"
+	admissionWebhookAnnotationMutateKey   = "traefik-route-validate.qikqiak.com/mutate"
+	admissionWebhookAnnotationStatusKey   = "traefik-route-validate.qikqiak.com/status"
 
 	nameLabel      = "app.kubernetes.io/name"
 	instanceLabel  = "app.kubernetes.io/instance"
@@ -196,9 +196,9 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 		req.Kind, req.Namespace, req.Name, resourceName, req.UID, req.Operation, req.UserInfo)
 
 	switch req.Kind.Kind {
-	case "Deployment":
-		var deployment appsv1.Deployment
-		if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
+	case "IngressRoute":
+		var ingressRoute v1alpha1.IngressRoute
+		if err := json.Unmarshal(req.Object.Raw, &ingressRoute); err != nil {
 			glog.Errorf("Could not unmarshal raw object: %v", err)
 			return &v1beta1.AdmissionResponse{
 				Result: &metav1.Status{
@@ -206,20 +206,8 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 				},
 			}
 		}
-		resourceName, resourceNamespace, objectMeta = deployment.Name, deployment.Namespace, &deployment.ObjectMeta
-		availableLabels = deployment.Labels
-	case "Service":
-		var service corev1.Service
-		if err := json.Unmarshal(req.Object.Raw, &service); err != nil {
-			glog.Errorf("Could not unmarshal raw object: %v", err)
-			return &v1beta1.AdmissionResponse{
-				Result: &metav1.Status{
-					Message: err.Error(),
-				},
-			}
-		}
-		resourceName, resourceNamespace, objectMeta = service.Name, service.Namespace, &service.ObjectMeta
-		availableLabels = service.Labels
+		resourceName, resourceNamespace, objectMeta = ingressRoute.Name, ingressRoute.Namespace, &ingressRoute.ObjectMeta
+		availableLabels = ingressRoute.Labels
 	}
 
 	if !validationRequired(ignoredNamespaces, objectMeta) {
@@ -251,64 +239,10 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 
 // main mutation process
 func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
-	req := ar.Request
-	var (
-		availableLabels, availableAnnotations map[string]string
-		objectMeta                            *metav1.ObjectMeta
-		resourceNamespace, resourceName       string
-	)
 
-	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
-		req.Kind, req.Namespace, req.Name, resourceName, req.UID, req.Operation, req.UserInfo)
-
-	switch req.Kind.Kind {
-	case "Deployment":
-		var deployment appsv1.Deployment
-		if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
-			glog.Errorf("Could not unmarshal raw object: %v", err)
-			return &v1beta1.AdmissionResponse{
-				Result: &metav1.Status{
-					Message: err.Error(),
-				},
-			}
-		}
-		resourceName, resourceNamespace, objectMeta = deployment.Name, deployment.Namespace, &deployment.ObjectMeta
-		availableLabels = deployment.Labels
-	case "Service":
-		var service corev1.Service
-		if err := json.Unmarshal(req.Object.Raw, &service); err != nil {
-			glog.Errorf("Could not unmarshal raw object: %v", err)
-			return &v1beta1.AdmissionResponse{
-				Result: &metav1.Status{
-					Message: err.Error(),
-				},
-			}
-		}
-		resourceName, resourceNamespace, objectMeta = service.Name, service.Namespace, &service.ObjectMeta
-		availableLabels = service.Labels
-	}
-
-	if !mutationRequired(ignoredNamespaces, objectMeta) {
-		glog.Infof("Skipping validation for %s/%s due to policy check", resourceNamespace, resourceName)
-		return &v1beta1.AdmissionResponse{
-			Allowed: true,
-		}
-	}
-
-	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "mutated"}
-	patchBytes, err := createPatch(availableAnnotations, annotations, availableLabels, addLabels)
-	if err != nil {
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
-		}
-	}
-
-	glog.Infof("AdmissionResponse: patch=%v\n", string(patchBytes))
 	return &v1beta1.AdmissionResponse{
 		Allowed: true,
-		Patch:   patchBytes,
+		Patch:   []byte{},
 		PatchType: func() *v1beta1.PatchType {
 			pt := v1beta1.PatchTypeJSONPatch
 			return &pt

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: sleep
   annotations:
-    admission-webhook-example.qikqiak.com/validate: "false"
+    traefik-route-validate.qikqiak.com/validate: "false"
 spec:
   replicas: 3
   selector:

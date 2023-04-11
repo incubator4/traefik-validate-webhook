@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: admission-webhook-example-deployment
+  name: traefik-route-validate-deployment
   labels:
-    app: admission-webhook-example
+    app: traefik-route-validate
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: admission-webhook-example
+      app: traefik-route-validate
   template:
     metadata:
       labels:
-        app: admission-webhook-example
+        app: traefik-route-validate
     spec:
-      serviceAccount: admission-webhook-example-sa
+      serviceAccountName: traefik-route-validate-sa
       containers:
-        - name: admission-webhook-example
-          image: cnych/admission-webhook-example:v1
+        - name: traefik-route-validate
+          image: cnych/traefik-route-validate:v1
           imagePullPolicy: Always
           args:
             - -tlsCertFile=/etc/webhook/certs/cert.pem
@@ -32,4 +32,4 @@ spec:
       volumes:
         - name: webhook-certs
           secret:
-            secretName: admission-webhook-example-certs
+            secretName: traefik-route-validate-certs

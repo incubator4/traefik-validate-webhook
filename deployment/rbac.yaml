@@ -1,17 +1,17 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: admission-webhook-example-sa
+  name: traefik-route-validate-sa
   labels:
-    app: admission-webhook-example
+    app: traefik-route-validate
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: admission-webhook-example-cr
+  name: traefik-route-validate-cr
   labels:
-    app: admission-webhook-example
+    app: traefik-route-validate
 rules:
 - apiGroups:
   - qikqiak.com
@@ -46,14 +46,14 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: admission-webhook-example-crb 
+  name: traefik-route-validate-crb
   labels:
-    app: admission-webhook-example
+    app: traefik-route-validate
 subjects:
 - kind: ServiceAccount
-  name: admission-webhook-example-sa
+  name: traefik-route-validate-sa
   namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: admission-webhook-example-cr
+  name: traefik-route-validate-cr
