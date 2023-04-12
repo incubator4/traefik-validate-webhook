@@ -97,7 +97,7 @@ func validateOwner(ing v1alpha1.IngressRoute, route Route, eps []EntryPoint) boo
 	}
 
 	reStr := fmt.Sprintf(
-		`^(%s)(?P<namespace>%s)-(?P<name>%s)-(?P<hash>[0-9a-f]+)@kubernetescrd$`,
+		`^(%s)?(?P<namespace>%s)-(?P<name>%s)-(?P<hash>[0-9a-f]+)@kubernetescrd$`,
 		prefixBuffer.String(),
 		ing.Namespace, ing.Name,
 	)

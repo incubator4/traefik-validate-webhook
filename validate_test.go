@@ -8,6 +8,10 @@ import (
 )
 
 func TestValidateOwner(t *testing.T) {
+	var entrypoints = []EntryPoint{
+		{Name: "websecure"},
+		{Name: "traefik"},
+	}
 	testCases := []struct {
 		desc     string
 		ing      v1alpha1.IngressRoute
@@ -54,7 +58,7 @@ func TestValidateOwner(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			output := validateOwner(test.ing, test.route)
+			output := validateOwner(test.ing, test.route, entrypoints)
 			assert.Equal(t, test.expected, output)
 		})
 	}
