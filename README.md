@@ -76,12 +76,12 @@ are their corresponding arguments.
     For example, 
 
    ```
-   Host(`foo.com`) && PathPrefix(\`/v1.1.0\`)
+   Host(`foo.com`) && PathPrefix(`/v1.1.0`)
    ``` 
    and 
 
    ```
-   Host(\`foo.com\`) && PathPrefix(\`/v1.0.0\`)
+   Host(\`foo.com\`) && PathPrefix(`/v1.0.0`)
    ``` 
-   are not the same
+   are not the same. Only all key and value matched map would be recognized as same route.
 
