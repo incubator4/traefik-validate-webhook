@@ -63,6 +63,7 @@ func validationRoutes(routes []v1alpha1.Route) *admissionv1.AdmissionResponse {
 	for _, route := range routes {
 		for _, r := range SplitMatchPath(route.Match) {
 			if ruleMap[r.ToString()] != nil {
+				glog.Warningf("detect duplicate route %s", r.ToString())
 				return &admissionv1.AdmissionResponse{
 					Allowed: false,
 					Result: &metav1.Status{
