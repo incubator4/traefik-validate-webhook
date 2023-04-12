@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/traefik/traefik/v2/pkg/config/dynamic"
-	"github.com/traefik/traefik/v2/pkg/config/static"
 	"io"
 	"net/http"
 )
@@ -21,7 +20,7 @@ type RouteInfo struct {
 }
 
 type EntryPoint struct {
-	static.EntryPoint
+	//static.EntryPoint
 	Name string `json:"name,omitempty"`
 }
 
