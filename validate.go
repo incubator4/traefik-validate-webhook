@@ -78,7 +78,11 @@ func validationRoutes(ing v1alpha1.IngressRoute) *admissionv1.AdmissionResponse 
 }
 
 func validateOwner(ing v1alpha1.IngressRoute, route Route) bool {
-	re := regexp.MustCompile(`^(?P<namespace>\w+)-(?P<name>\w+)-(?P<hash>[0-9a-f]+)@kubernetescrd$`)
+	reStr := fmt.Sprintf(
+		`^(?P<namespace>%s)-(?P<name>%s)-(?P<hash>[0-9a-f]+)@kubernetescrd$`,
+		ing.Namespace, ing.Name,
+	)
+	re := regexp.MustCompile(reStr)
 	match := re.FindStringSubmatch(route.Owner)
 	if len(match) > 0 {
 		result := make(map[string]string)

@@ -36,6 +36,17 @@ func TestValidateOwner(t *testing.T) {
 			route:    Route{Owner: "default-test-9dd2d013e4859514de1a@kubernetescrd"},
 			expected: false,
 		},
+		{
+			desc: "error test 2",
+			ing: v1alpha1.IngressRoute{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-9",
+					Namespace: "default",
+				},
+			},
+			route:    Route{Owner: "default-test-9dd2d013e4859514de1a@kubernetescrd"},
+			expected: false,
+		},
 	}
 
 	for _, test := range testCases {
