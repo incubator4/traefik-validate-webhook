@@ -12,7 +12,8 @@ on:
       - '*'
 
 jobs:
-  build-api:
+
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

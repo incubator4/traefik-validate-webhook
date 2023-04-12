@@ -14,33 +14,20 @@ metadata:
     app: traefik-route-validate
 rules:
 - apiGroups:
-  - qikqiak.com
+  - incubator4.com
   resources:
   - "*"
   verbs:
   - "*"
 - apiGroups:
-  - ""
+  - traefik.containo.us
   resources:
-  - pods
+  - ingressroutes
   - events
   verbs:
-  - "*"
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - daemonsets
-  - replicasets
-  - statefulsets
-  verbs:
-  - "*"
-- apiGroups:
-  - autoscaling
-  resources:
-  - '*'
-  verbs:
-  - '*'
+  - get
+  - list
+  - watch
 
 ---
 kind: ClusterRoleBinding

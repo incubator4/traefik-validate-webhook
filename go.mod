@@ -3,7 +3,10 @@ module github.com/incubator4/traefik-validate-webhook
 go 1.13
 
 require (
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.15.0
 	github.com/traefik/traefik/v2 v2.9.10
 	k8s.io/api v0.22.1
 	k8s.io/apimachinery v0.22.1

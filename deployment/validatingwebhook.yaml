@@ -5,7 +5,7 @@ metadata:
   labels:
     app: traefik-route-validate
 webhooks:
-  - name: required-labels.qikqiak.com
+  - name: required-labels.incubator4.com
     clientConfig:
       service:
         name: traefik-route-validate
