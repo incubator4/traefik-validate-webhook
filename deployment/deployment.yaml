@@ -17,13 +17,12 @@ spec:
       serviceAccountName: traefik-route-validate-sa
       containers:
         - name: traefik-route-validate
-          image: cnych/traefik-route-validate:v1
+          image: incubator4/traefik-validate-webhook:sha-5a6167a
           imagePullPolicy: Always
           args:
-            - -tlsCertFile=/etc/webhook/certs/cert.pem
-            - -tlsKeyFile=/etc/webhook/certs/key.pem
-            - -alsologtostderr
-            - -v=4
+            - --tlsCertFile=/etc/webhook/certs/tls.crt
+            - --tlsKeyFile=/etc/webhook/certs/tls.key
+#            - --alsologtostderr
             - 2>&1
           volumeMounts:
             - name: webhook-certs

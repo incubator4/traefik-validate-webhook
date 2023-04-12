@@ -4,19 +4,23 @@ metadata:
   name: traefik-route-validate-cfg
   labels:
     app: traefik-route-validate
+  annotations:
+    cert-manager.io/inject-ca-from: default/traefik-route-validate-certs
 webhooks:
-  - name: required-labels.incubator4.com
+  - name: duplicate-check.incubator4.com
     clientConfig:
       service:
-        name: traefik-route-validate
+        name: traefik-route-validate-svc
         namespace: default
         path: "/validate"
-      caBundle: ${CA_BUNDLE}
+      caBundle: ""
     rules:
       - operations: [ "CREATE", "UPDATE" ]
         apiGroups: ["traefik.containo.us", ""]
         apiVersions: ["v1alpha1"]
         resources: ["ingressroutes"]
 
-    admissionReviewVersions: []
-    sideEffects: []
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+    sideEffects: "NoneOnDryRun"

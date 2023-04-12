@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/traefik/traefik/v2/pkg/provider/kubernetes/crd/traefik/v1alpha1"
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // validate deployments and services
-func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+func (whsvr *WebhookServer) validate(ar *admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {
 	req := ar.Request
 	var (
 		objectMeta                      *metav1.ObjectMeta
@@ -27,7 +27,7 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 		var ingressRoute v1alpha1.IngressRoute
 		if err := json.Unmarshal(req.Object.Raw, &ingressRoute); err != nil {
 			glog.Errorf("Could not unmarshal raw object: %v", err)
-			return &v1beta1.AdmissionResponse{
+			return &admissionv1.AdmissionResponse{
 				Result: &metav1.Status{
 					Message: err.Error(),
 				},
@@ -39,7 +39,7 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 
 	if !validationRequired(ignoredNamespaces, objectMeta) {
 		glog.Infof("Skipping validation for %s/%s due to policy check", resourceNamespace, resourceName)
-		return &v1beta1.AdmissionResponse{
+		return &admissionv1.AdmissionResponse{
 			Allowed: true,
 		}
 	}
@@ -53,16 +53,16 @@ func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool 
 	return required
 }
 
-func validationRoutes(routes []v1alpha1.Route) *v1beta1.AdmissionResponse {
+func validationRoutes(routes []v1alpha1.Route) *admissionv1.AdmissionResponse {
 	ruleMap, err := ListRules()
 	if err != nil {
-		return &v1beta1.AdmissionResponse{Allowed: true}
+		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
 	for _, route := range routes {
 		for _, r := range SplitMatchPath(route.Match) {
 			if ruleMap[r.ToString()] != nil {
-				return &v1beta1.AdmissionResponse{
+				return &admissionv1.AdmissionResponse{
 					Allowed: false,
 					Result: &metav1.Status{
 						Message: fmt.Sprintf("route %s has already defined", r.ToString()),
@@ -73,5 +73,5 @@ func validationRoutes(routes []v1alpha1.Route) *v1beta1.AdmissionResponse {
 		}
 	}
 
-	return &v1beta1.AdmissionResponse{Allowed: true}
+	return &admissionv1.AdmissionResponse{Allowed: true}
 }

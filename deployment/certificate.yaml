@@ -1,0 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-route-validate-certs
+spec:
+  duration: 8760h
+  renewBefore: 8000h
+  subject:
+    organizations:
+      - incubator4.com
+  commonName: traefik-route-validate-svc.default
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  dnsNames:
+    - traefik-route-validate-svc
+    - traefik-route-validate-svc.default
+    - traefik-route-validate-svc.default.svc
+    - traefik-route-validate-svc.default.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: webhook-issuer
+  secretName: traefik-route-validate-certs
