@@ -85,7 +85,7 @@ func parseSingleRule(input string) map[string]string {
 }
 
 func (r *Route) ToString() string {
-	byteData, err := json.Marshal(r)
+	byteData, err := json.Marshal(r.Rule)
 	if err != nil {
 		return ""
 	}
