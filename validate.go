@@ -61,7 +61,7 @@ func validationRoutes(ing v1alpha1.IngressRoute) *admissionv1.AdmissionResponse 
 
 	for _, route := range ing.Spec.Routes {
 		for _, r := range SplitMatchPath(route.Match) {
-			if rule := ruleMap[r.ToString()]; !rule.IsEmpty() && validateOwner(ing, rule) {
+			if rule := ruleMap[r.ToString()]; !rule.IsEmpty() && !validateOwner(ing, rule) {
 				glog.Warningf("detect duplicate route %s", r.ToString())
 				return &admissionv1.AdmissionResponse{
 					Allowed: false,
