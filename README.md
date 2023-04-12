@@ -1,32 +1,76 @@
-# Kubernetes Admission Webhook example
+# Traefik IngressRoute Validate Webhook
 
-This tutoral shows how to build and deploy an [AdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhooks).
+This webhook use to check duplicate route in kubernetes cluster by admission webhook.
 
-The Kubernetes [documentation](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/) contains a common set of recommended labels that allows tools to work interoperably, describing objects in a common manner that all tools can understand. In addition to supporting tooling, the recommended labels describe applications in a way that can be queried.
-In our validating webhook example we make these labels required on deployments and services, so this webhook rejects every deployment and every service that doesn’t have these labels set. The mutating webhook in the example adds all the missing required labels with `not_available` set as the value.
+## Install
 
 ## Prerequisites
 
-Kubernetes 1.9.0 or above with the `admissionregistration.k8s.io/v1beta1` API enabled. Verify that by the following command:
+### Kubernetes API support
+
+Kubernetes 1.9.0 or above with the `admissionregistration.k8s.io/v1` API enabled. Verify that by the following command:
 ```
-kubectl api-versions | grep admissionregistration.k8s.io/v1beta1
+kubectl api-versions | grep admissionregistration.k8s.io/v1
 ```
 The result should be:
 ```
-admissionregistration.k8s.io/v1beta1
+admissionregistration.k8s.io/v1
 ```
 
-In addition, the `MutatingAdmissionWebhook` and `ValidatingAdmissionWebhook` admission controllers should be added and listed in the correct order in the admission-control flag of kube-apiserver.
+### Cert-Manager
 
-## Build
+This programs use cert-manager annotations to auto create cert.  
+You can also use `Kubernetes CertificateSigningRequest` generate available cert.
 
-Build and push docker image
+## Install
+
+Apply kubernetes files.
+This project assume you install in `default` namespace,  
+otherwise dnsName in `certificate.yaml` should be replaced with right namespace.
+
+And you need to create a service to access traefik `traefik` port,  
+it might not be exposed in default service.
+In this case, a external service should be created.
+
+Also, traefik default route must be applied,in that case you can access `/api` PathPrefix
+with `traefik` port.
    
 ```
-./build
+kubectl apply -k deployment
 ```
 
 ## How does it work?
 
-We have a blog post that explains webhooks in depth with the help of this example. Check [it](https://www.qikqiak.com/post/k8s-admission-webhook/) out!
 
+Basically it just use Kubernetes Validation Webhook to check if `IngressRoute` could be applied
+or not.
+
+### Logical rules
+
+1. Input: Traefik rule match just like this.
+
+    ```
+    Host(`foo.com`) && (PathPrefix(`/a`) || PathPrefix(`/b`))
+    ```
+
+2. Split and Combine: The splitAndCombine function is responsible for processing the input string and generating a list 
+of minimal logical expressions. It does this by recursively splitting the input string into smaller segments and 
+combining them based on the logical operators && (AND) and || (OR). For example, an input string like:  
+    ```
+    a && (b || c)
+    ```
+   will be transformed into:
+    ```
+    (a && b) || (a && c)
+    ```
+3. Parse Single Rule: The parseSingleRule function processes each logical expression in the list and extracts individual 
+rules (such as `Host` and `PathPrefix`). It returns a map of rules where the keys are the rule functions, and the values 
+are their corresponding arguments.
+    ```
+   map[string]string{"Host":"foo.com", "PathPrefix":"/a"}
+    ```
+   
+    In that case, there is any difference between k and v of the map, it will be considered as a new route.
+    For example, ``Host(\`foo.com\`) && PathPrefix(\`/v1.1.0\`)`` and ``Host(\`foo.com\`) && PathPrefix(\`/v1.0.0\`)`` are not the same
+
+API is from traefik `/api/http/routers`
