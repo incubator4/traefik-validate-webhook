@@ -45,6 +45,8 @@ kubectl apply -k deployment
 Basically it just use Kubernetes Validation Webhook to check if `IngressRoute` could be applied
 or not.
 
+API is from traefik `/api/http/routers`
+
 ### Logical rules
 
 1. Input: Traefik rule match just like this.
@@ -71,6 +73,15 @@ are their corresponding arguments.
     ```
    
     In that case, there is any difference between k and v of the map, it will be considered as a new route.
-    For example, ``Host(\`foo.com\`) && PathPrefix(\`/v1.1.0\`)`` and ``Host(\`foo.com\`) && PathPrefix(\`/v1.0.0\`)`` are not the same
+    For example, 
 
-API is from traefik `/api/http/routers`
+   ```
+   Host(`foo.com`) && PathPrefix(\`/v1.1.0\`)
+   ``` 
+   and 
+
+   ```
+   Host(\`foo.com\`) && PathPrefix(\`/v1.0.0\`)
+   ``` 
+   are not the same
+
