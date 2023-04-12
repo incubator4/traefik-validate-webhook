@@ -16,7 +16,9 @@ func TestSplitMatchPath(t *testing.T) {
 			match: "Host(`foo.com`)",
 			expected: []Route{
 				{
-					"Host": "foo.com",
+					Rule: map[string]string{
+						"Host": "foo.com",
+					},
 				},
 			},
 		},
@@ -25,12 +27,16 @@ func TestSplitMatchPath(t *testing.T) {
 			match: "Host(`foo.com`) && (PathPrefix(`/a`) || PathPrefix(`/b`))",
 			expected: []Route{
 				{
-					"Host":       "foo.com",
-					"PathPrefix": "/a",
+					Rule: map[string]string{
+						"Host":       "foo.com",
+						"PathPrefix": "/a",
+					},
 				},
 				{
-					"Host":       "foo.com",
-					"PathPrefix": "/b",
+					Rule: map[string]string{
+						"Host":       "foo.com",
+						"PathPrefix": "/b",
+					},
 				},
 			},
 		},
@@ -39,10 +45,14 @@ func TestSplitMatchPath(t *testing.T) {
 			match: "(Host(`foo.com`) || Host(`bar.com`))",
 			expected: []Route{
 				{
-					"Host": "foo.com",
+					Rule: map[string]string{
+						"Host": "foo.com",
+					},
 				},
 				{
-					"Host": "bar.com",
+					Rule: map[string]string{
+						"Host": "bar.com",
+					},
 				},
 			},
 		},
@@ -51,12 +61,16 @@ func TestSplitMatchPath(t *testing.T) {
 			match: "(Host(`foo.com`) || !Host(`bar.com`)) && PathPrefix(`/a`)",
 			expected: []Route{
 				{
-					"Host":       "foo.com",
-					"PathPrefix": "/a",
+					Rule: map[string]string{
+						"Host":       "foo.com",
+						"PathPrefix": "/a",
+					},
 				},
 				{
-					"!Host":      "bar.com",
-					"PathPrefix": "/a",
+					Rule: map[string]string{
+						"!Host":      "bar.com",
+						"PathPrefix": "/a",
+					},
 				},
 			},
 		},

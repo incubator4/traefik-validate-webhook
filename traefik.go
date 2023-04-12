@@ -9,7 +9,11 @@ func ListRules() (map[string]Route, error) {
 	}
 
 	for _, service := range services {
-		for _, route := range SplitMatchPath(service.Rule) {
+		for _, route := range SplitMatchPath(service.Rule, func(route Route) Route {
+			r := route
+			r.Owner = service.Name
+			return r
+		}) {
 			key := route.ToString()
 			if key != "" {
 				rules[key] = route

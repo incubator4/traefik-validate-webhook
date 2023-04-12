@@ -6,15 +6,28 @@ import (
 	"regexp"
 )
 
-type Route map[string]string
+type Route struct {
+	Rule  map[string]string
+	Owner string
+}
 
-func SplitMatchPath(match string) []Route {
+type RouteOption func(route Route) Route
+
+func (r *Route) IsEmpty() bool {
+	return r.Rule == nil
+}
+
+func SplitMatchPath(match string, options ...RouteOption) []Route {
 	segments := splitAndCombine(match)
 
 	var routes []Route
 	for _, segment := range segments {
 		rules := parseSingleRule(segment)
-		routes = append(routes, rules)
+		r := Route{Rule: rules}
+		for _, option := range options {
+			r = option(r)
+		}
+		routes = append(routes, r)
 	}
 
 	return routes

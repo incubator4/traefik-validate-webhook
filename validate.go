@@ -7,6 +7,7 @@ import (
 	"github.com/traefik/traefik/v2/pkg/provider/kubernetes/crd/traefik/v1alpha1"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"regexp"
 )
 
 // validate deployments and services
@@ -15,16 +16,15 @@ func (whsvr *WebhookServer) validate(ar *admissionv1.AdmissionReview) *admission
 	var (
 		objectMeta                      *metav1.ObjectMeta
 		resourceNamespace, resourceName string
+		ingressRoute                    v1alpha1.IngressRoute
 	)
-
-	var routes []v1alpha1.Route
 
 	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
 		req.Kind, req.Namespace, req.Name, resourceName, req.UID, req.Operation, req.UserInfo)
 
 	switch req.Kind.Kind {
 	case "IngressRoute":
-		var ingressRoute v1alpha1.IngressRoute
+
 		if err := json.Unmarshal(req.Object.Raw, &ingressRoute); err != nil {
 			glog.Errorf("Could not unmarshal raw object: %v", err)
 			return &admissionv1.AdmissionResponse{
@@ -34,7 +34,6 @@ func (whsvr *WebhookServer) validate(ar *admissionv1.AdmissionReview) *admission
 			}
 		}
 		resourceName, resourceNamespace, objectMeta = ingressRoute.Name, ingressRoute.Namespace, &ingressRoute.ObjectMeta
-		routes = ingressRoute.Spec.Routes
 	}
 
 	if !validationRequired(ignoredNamespaces, objectMeta) {
@@ -44,7 +43,7 @@ func (whsvr *WebhookServer) validate(ar *admissionv1.AdmissionReview) *admission
 		}
 	}
 
-	return validationRoutes(routes)
+	return validationRoutes(ingressRoute)
 }
 
 func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
@@ -53,16 +52,16 @@ func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool 
 	return required
 }
 
-func validationRoutes(routes []v1alpha1.Route) *admissionv1.AdmissionResponse {
+func validationRoutes(ing v1alpha1.IngressRoute) *admissionv1.AdmissionResponse {
 	ruleMap, err := ListRules()
 	if err != nil {
 		glog.Errorf("Cannot list rules error: %s", err.Error())
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
-	for _, route := range routes {
+	for _, route := range ing.Spec.Routes {
 		for _, r := range SplitMatchPath(route.Match) {
-			if ruleMap[r.ToString()] != nil {
+			if rule := ruleMap[r.ToString()]; !rule.IsEmpty() && validateOwner(ing, rule) {
 				glog.Warningf("detect duplicate route %s", r.ToString())
 				return &admissionv1.AdmissionResponse{
 					Allowed: false,
@@ -76,4 +75,21 @@ func validationRoutes(routes []v1alpha1.Route) *admissionv1.AdmissionResponse {
 	}
 
 	return &admissionv1.AdmissionResponse{Allowed: true}
+}
+
+func validateOwner(ing v1alpha1.IngressRoute, route Route) bool {
+	re := regexp.MustCompile(`^(?P<namespace>\w+)-(?P<name>\w+)-(?P<hash>[0-9a-f]+)@kubernetescrd$`)
+	match := re.FindStringSubmatch(route.Owner)
+	if len(match) > 0 {
+		result := make(map[string]string)
+		for i, name := range re.SubexpNames() {
+			if i != 0 && name != "" {
+				result[name] = match[i]
+			}
+		}
+		if result["name"] == ing.Name && result["namespace"] == ing.Namespace {
+			return true
+		}
+	}
+	return false
 }

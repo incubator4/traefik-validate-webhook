@@ -14,8 +14,13 @@ type ServerAddr struct {
 	Port     int
 }
 
-func ListServices() ([]dynamic.Router, error) {
-	var results []dynamic.Router
+type RouteInfo struct {
+	dynamic.Router
+	Name string
+}
+
+func ListServices() ([]RouteInfo, error) {
+	var results []RouteInfo
 	resp, err := http.DefaultClient.Get(
 		fmt.Sprintf("%s://%s:%d/api/http/routers", server.Protocol, server.Host, server.Port))
 	if err != nil {
