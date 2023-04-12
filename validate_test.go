@@ -30,6 +30,17 @@ func TestValidateOwner(t *testing.T) {
 			expected: true,
 		},
 		{
+			desc: "simple test",
+			ing: v1alpha1.IngressRoute{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+			},
+			route:    Route{Owner: "websecure-default-test-9dd2d013e4859514de1a@kubernetescrd"},
+			expected: true,
+		},
+		{
 			desc: "error test",
 			ing: v1alpha1.IngressRoute{
 				ObjectMeta: metav1.ObjectMeta{

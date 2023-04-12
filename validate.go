@@ -91,9 +91,10 @@ func validateOwner(ing v1alpha1.IngressRoute, route Route, eps []EntryPoint) boo
 	var prefixBuffer = new(bytes.Buffer)
 	for i, e := range eps {
 		if i > 0 {
-			prefixBuffer.WriteString("|")
+			prefixBuffer.WriteByte('|')
 		}
 		prefixBuffer.WriteString(e.Name)
+		prefixBuffer.WriteByte('-')
 	}
 
 	reStr := fmt.Sprintf(
