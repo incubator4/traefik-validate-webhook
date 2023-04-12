@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/glog"
@@ -58,12 +59,18 @@ func validationRoutes(ing v1alpha1.IngressRoute) *admissionv1.AdmissionResponse 
 		glog.Errorf("Cannot list rules error: %s", err.Error())
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
+	entryPoints, err := ListEntryPoints()
+	if err != nil {
+		glog.Errorf("Cannot list entrypoints error: %s", err.Error())
+		return &admissionv1.AdmissionResponse{Allowed: true}
+	}
 
 	for _, route := range ing.Spec.Routes {
 		for _, r := range SplitMatchPath(route.Match) {
 			rule := ruleMap[r.ToString()]
-			glog.Infof("rule %+v rule empty %t, owner %t", rule, rule.IsEmpty(), validateOwner(ing, rule))
-			if !rule.IsEmpty() && !validateOwner(ing, rule) {
+			isOwner := validateOwner(ing, rule, entryPoints)
+			glog.Infof("rule %+v rule empty %t, owner %t", rule, rule.IsEmpty(), isOwner)
+			if !rule.IsEmpty() && !isOwner {
 				glog.Warningf("detect duplicate route %s", r.ToString())
 				return &admissionv1.AdmissionResponse{
 					Allowed: false,
@@ -79,9 +86,19 @@ func validationRoutes(ing v1alpha1.IngressRoute) *admissionv1.AdmissionResponse 
 	return &admissionv1.AdmissionResponse{Allowed: true}
 }
 
-func validateOwner(ing v1alpha1.IngressRoute, route Route) bool {
+func validateOwner(ing v1alpha1.IngressRoute, route Route, eps []EntryPoint) bool {
+
+	var prefixBuffer = new(bytes.Buffer)
+	for i, e := range eps {
+		if i > 0 {
+			prefixBuffer.WriteString("|")
+		}
+		prefixBuffer.WriteString(e.Name)
+	}
+
 	reStr := fmt.Sprintf(
-		`^(?P<namespace>%s)-(?P<name>%s)-(?P<hash>[0-9a-f]+)@kubernetescrd$`,
+		`^(%s)(?P<namespace>%s)-(?P<name>%s)-(?P<hash>[0-9a-f]+)@kubernetescrd$`,
+		prefixBuffer.String(),
 		ing.Namespace, ing.Name,
 	)
 	re := regexp.MustCompile(reStr)
