@@ -56,6 +56,7 @@ func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool 
 func validationRoutes(routes []v1alpha1.Route) *admissionv1.AdmissionResponse {
 	ruleMap, err := ListRules()
 	if err != nil {
+		glog.Errorf("Cannot list rules error: %s", err.Error())
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
