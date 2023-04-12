@@ -17,13 +17,18 @@ spec:
       serviceAccountName: traefik-route-validate-sa
       containers:
         - name: traefik-route-validate
-          image: incubator4/traefik-validate-webhook:sha-dd09b43
+          image: incubator4/traefik-validate-webhook:sha-c5a3e81
           imagePullPolicy: Always
           args:
             - --tlsCertFile=/etc/webhook/certs/tls.crt
             - --tlsKeyFile=/etc/webhook/certs/tls.key
 #            - --alsologtostderr
             - 2>&1
+          env:
+            - name: TRAEFIK_HOST
+              value: "traefik-internal"
+            - name: TRAEFIK_PORT
+              value: "8080"
           volumeMounts:
             - name: webhook-certs
               mountPath: /etc/webhook/certs

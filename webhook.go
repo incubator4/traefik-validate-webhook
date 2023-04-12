@@ -35,6 +35,9 @@ var (
 
 const (
 	admissionWebhookAnnotationValidateKey = "traefik-route-validate.incubator4.com/validate"
+
+	admissionResponseApiVersion = "admission.k8s.io/v1"
+	admissionResponseKind       = "AdmissionReview"
 )
 
 type WebhookServer struct {
@@ -119,7 +122,12 @@ func (whsvr *WebhookServer) serve(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	admissionReview := admissionv1.AdmissionReview{}
+	admissionReview := admissionv1.AdmissionReview{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: admissionResponseApiVersion,
+			Kind:       admissionResponseKind,
+		},
+	}
 	if admissionResponse != nil {
 		admissionReview.Response = admissionResponse
 		if ar.Request != nil {
