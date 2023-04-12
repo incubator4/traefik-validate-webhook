@@ -14,7 +14,7 @@ type Route struct {
 type RouteOption func(route Route) Route
 
 func (r *Route) IsEmpty() bool {
-	return r.Rule == nil
+	return r.Rule == nil || len(r.Rule) == 0
 }
 
 func SplitMatchPath(match string, options ...RouteOption) []Route {
